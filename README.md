@@ -1,139 +1,138 @@
 # 🎬 NoSQL_MovieRatings  
-**End-to-End NoSQL Database Implementation and Benchmarking**
-
-MongoDB-based data engineering project exploring flexible schema design, CRUD operations, aggregation pipelines, and hybrid SQL/NoSQL performance benchmarking using the **MovieLens** dataset.
+**Comparative Data Engineering Project: MongoDB vs PostgreSQL using MovieLens Data**
 
 ---
 
-## 🧠 Overview
-
-This project demonstrates how to:
-- Design a **NoSQL schema** for movie ratings (users, movies, ratings).
-- Build a **Python + PyMongo loader** for CSV ingestion.
-- Run **MongoDB aggregations** for analytics.
-- Compare **query latency** and flexibility between MongoDB and PostgreSQL.
-- Optionally integrate **Spark** via MongoDB Connector for scalable workflows.
-
-The dataset is derived from [MovieLens](https://grouplens.org/datasets/movielens/) and preprocessed into structured CSVs (`movies.csv`, `ratings.csv`, `users.csv`).
+## 📘 Overview
+This portfolio project implements a **NoSQL database design and data pipeline** for a movie rating dataset inspired by **MovieLens**.  
+The goal is to demonstrate ETL, aggregation, and analytical querying in **MongoDB**, and then compare its performance and flexibility to a **PostgreSQL** baseline.
 
 ---
 
-## 🏗️ Architecture
+## 🧱 Project Objectives
 
-```mermaid
+- Design a **document-oriented schema** for movie ratings.  
+- Load and query large datasets using **MongoDB** and **PyMongo**.  
+- Perform CRUD and aggregation operations (e.g., top-rated movies).  
+- Compare **query latency** and **schema flexibility** with SQL.  
+- Optionally integrate **Apache Spark** via the MongoDB connector for hybrid pipelines.
+
+---
+
+## 🗂️ Repository Structure
+
+```text
+02_NoSQL_MovieRatings/
+│
+├── data/                # Generated CSVs (movies, users, ratings)
+├── external/            # Source datasets (MovieLens)
+├── scripts/             # ETL and DB schema scripts
+├── src/                 # Python source code (loader, queries, benchmarks)
+├── docker-compose.yml   # MongoDB, Mongo Express, PostgreSQL services
+├── requirements.txt     # Dependencies
+└── README.Rmd           # Source documentation for GitHub rendering
+```
+##  Architecture
+```
 flowchart LR
-  A[CSV: ratings/movies/users] --> B[Loader (Python + PyMongo)]
-  B --> C[(MongoDB)]
-  C <--> D[Aggregations (Mongo Pipeline)]
-  C <--> E[(Spark Mongo Connector) – optional]
-  A --> F[(Postgres baseline – optional)]
-  F <--> G[SQL Benchmarks]
-  C <--> H[NoSQL Benchmarks]
-Components
-
-Python + PyMongo – load data and run aggregations.
-MongoDB – main database for NoSQL model.
-PostgreSQL – baseline for structured analytical comparison.
-Docker Compose – runs MongoDB, Mongo Express, and PostgreSQL locally.
-Spark Connector (optional) – future integration for hybrid data processing.
-⚙️ Setup
-1️⃣ Clone and build
+    A[CSV: ratings/movies/users] --> B[Loader (Python + PyMongo)]
+    B --> C[(MongoDB)]
+    C <--> D[Aggregations (Mongo Pipeline)]
+    C <--> E[(Spark Mongo Connector) – optional]
+    A --> F[(Postgres baseline)]
+    F <--> G[SQL Benchmarks]
+    C <--> H[NoSQL Benchmarks]
+```
+## ⚙️ Environment Setup
+# 1️⃣ Create the Project Environment
+```
+cd ~
 git clone https://github.com/krotov79/02_NoSQL_MovieRatings.git
 cd 02_NoSQL_MovieRatings
-docker compose up -d
-
-2️⃣ Prepare environment
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+# 2️⃣ Launch Services
+```
+docker compose up -d
+docker ps
+```
+Services available:
 
-3️⃣ Download dataset
+MongoDB → localhost:27017
+Mongo Express → http://localhost:8081
+PostgreSQL → localhost:5432 (user: postgres / password: postgres)
+## 📦 Data Preparation
+# Step 1 — Download MovieLens
+```
 mkdir -p external
 cd external
 wget https://files.grouplens.org/datasets/movielens/ml-latest-small.zip
 unzip -o ml-latest-small.zip -d ml-latest-small
-cd ..
-
-4️⃣ Preprocess MovieLens data
+```
+# Step 2 — Transform Dataset
+```
 python scripts/prepare_movielens.py
+```
+Generates:
 
+data/movies.csv
+data/users.csv
+data/ratings.csv
 
-This script generates cleaned CSVs under data/:
-
-movies.csv
-
-ratings.csv
-
-users.csv
-
-💾 Load Data into MongoDB
+## 💾 MongoDB Loading and Queries
+Load the data and test:
+```
 python src/load_data.py
-
-
-Sample log:
-
-Inserted 9742 movies...
-Inserted 610 users...
-Inserted 100000 ratings...
-Done.
-
-
-Quick verification:
-
-python - <<'PY'
-from queries import top_movies
-print(top_movies(min_votes=50, top_n=10))
-PY
-
-🧮 Benchmarking (MongoDB vs PostgreSQL)
-Load into PostgreSQL
+python src/queries.py
+```
+## 🧮 SQL Baseline and Benchmark
+Load CSVs into PostgreSQL
+```
+chmod +x scripts/pg_load.sh
 ./scripts/pg_load.sh
-
-Run the benchmark
+```
+Run Benchmark
+```
 python src/benchmark_sql_vs_nosql.py
-
-
-Output:
-
+```
+Output example:
+```
 Mongo top_movies: {'mean_ms': 59.83, 'p95_ms': 61.55}
 Postgres top_movies: {'mean_ms': 15.49, 'p95_ms': 12.51}
 Mongo user_history: {'mean_ms': 52.11, 'p95_ms': 52.13}
 Postgres user_history: {'mean_ms': 8.33, 'p95_ms': 8.3}
-
-📊 Benchmark Results & Discussion
+```
+## 📊 Benchmark Results & Discussion
+```
 Query Type	MongoDB (ms)	PostgreSQL (ms)	Observation
 Top Movies (Aggregation)	mean ≈ 59.83 / p95 ≈ 61.55	mean ≈ 15.49 / p95 ≈ 12.51	SQL’s query planner optimizes aggregates on small, indexed datasets efficiently.
-User History (Join + Sort)	mean ≈ 52.11 / p95 ≈ 52.13	mean ≈ 8.33 / p95 ≈ 8.3	PostgreSQL’s relational joins outperform Mongo’s $lookup for this dataset size.
-💡 Key Takeaways
+User History (Join + Sort)	mean ≈ 52.11 / p95 ≈ 52.13	mean ≈ 8.33 / p95 ≈ 8.3	PostgreSQL joins outperform MongoDB $lookup on moderate datasets.
+```
 
-For structured, moderate-size datasets, PostgreSQL’s optimizer and indexing deliver faster reads and joins.
-MongoDB, while slower here, provides schema flexibility, document-oriented modeling, and horizontal scaling for dynamic or unstructured data.
+##💡 Key Takeaways
 
-In production-scale systems, both can coexist:
+For structured data, PostgreSQL’s optimizer and indexes deliver faster reads and joins.
+MongoDB remains more flexible for dynamic schemas and unstructured ingestion.
+For hybrid systems, Mongo can serve as a real-time ingestion layer while Postgres supports analytical queries and reporting.
 
-MongoDB for ingestion and flexible data structures.
-PostgreSQL (or a warehouse) for analytical reporting.
+##🧩 Conclusion
 
-⚖️ Summary
+The NoSQL_MovieRatings project explored data modeling, ETL, and performance benchmarking between MongoDB and PostgreSQL using the MovieLens dataset.
+Although the focus was on NoSQL workflows, the experiment highlights an important principle:
+Relational databases can outperform NoSQL on small, structured, analytical workloads.
 
-This project intentionally highlights the trade-off:
-NoSQL offers flexibility, SQL offers raw analytical performance.
-Even though the project is titled NoSQL_MovieRatings, it demonstrates that real engineering requires choosing the right tool for the workload — not ideology.
+Key Insights
+MongoDB excels in schema flexibility, rapid development, and horizontal scaling.
+PostgreSQL dominates analytical queries and joins when data is structured and well-indexed.
+A hybrid architecture — MongoDB for ingestion, PostgreSQL or Spark for analytics — combines the strengths of both worlds.
+This project demonstrates practical trade-offs in data engineering and database design — exactly what real-world systems demand.
 
-🧩 Conclusion
+🧠 Tech Stack
 
-The NoSQL_MovieRatings project implemented a full NoSQL workflow with data ingestion, modeling, and analytics — then benchmarked it against a relational system to measure trade-offs.
-
-Result: PostgreSQL was faster on this structured dataset, but MongoDB provides greater adaptability and scalability for evolving data structures.
-Through this, we learned that:
-MongoDB simplifies working with nested, evolving, and semi-structured data.
-PostgreSQL remains unbeatable for heavy analytical joins on well-defined schemas.
-Hybrid architectures combining MongoDB + SQL + Spark deliver both agility and analytical power.
-
-Tech Stack:
 Python · PyMongo · psycopg2 · Docker Compose · MongoDB · PostgreSQL · Pandas
 
-Next Steps:
-Add Spark–MongoDB integration.
-Extend aggregations with “Top Trending Movies (30 days)” window.
-Visualize benchmark results via Looker Studio or Plotly.
+
+
+
