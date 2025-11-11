@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    ports: ["27017:27017"]
+    environment:
+      MONGO_INITDB_DATABASE: moviedb
+    volumes:
+      - mongodata:/data/db
+
+  mongo-express:
+    image: mongo-express:1
+    container_name: mongo-express
+    ports: ["8081:8081"]
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+
+  postgres:
+    image: postgres:16
+    container_name: pg
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: moviedb
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  mongodata:
+  pgdata:
