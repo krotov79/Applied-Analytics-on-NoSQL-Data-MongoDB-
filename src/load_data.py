@@ -58,6 +58,11 @@ def load_users(fp, db):
 
 if __name__ == "__main__":
     cli = MongoClient(MONGO_URI); db = cli[DB_NAME]
+    # Always start clean (development safety)
+    db.movies.drop()
+    db.ratings.drop()
+    db.users.drop()
+
     create_indexes(db)
     load_movies("data/movies.csv", db)
     load_ratings("data/ratings.csv", db)
