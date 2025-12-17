@@ -1,4 +1,4 @@
-# 🎬 NoSQL_MovieRatings  
+# 🎬 Applied Analytics on NoSQL Data (MongoDB) 
 **Comparative Data Engineering Project: MongoDB vs PostgreSQL using MovieLens Data**
 
 ---
